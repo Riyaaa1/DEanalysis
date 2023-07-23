@@ -1,0 +1,33 @@
+{
+    "id": "B089259B",
+    "path": "C:/Users/user/OneDrive/Desktop/R projects/rna seq analysis/DEanalysis/RNASeq analysis.Rmd",
+    "project_path": "RNASeq analysis.Rmd",
+    "type": "r_markdown",
+    "hash": "2502760287",
+    "contents": "",
+    "dirty": true,
+    "created": 1690045954229.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "246,0",
+        "scrollLine": "0",
+        "rmdVisualMode": "true",
+        "rmdVisualModeLocation": "8742:6449",
+        "rmdVisualWrapConfigured": "true",
+        "docOutlineVisible": "0",
+        "rmdVisualCollapsedChunks": "",
+        "docOutlineSize": "13"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1690119617,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1690122564266,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,12 @@
+"0","gene_list <- foldChanges$ENTREZID"
+"0","kegg_enrich<-enrichKEGG("
+"0","  gene_list,"
+"0","  organism = ""hsa"","
+"0","  keyType = ""kegg"","
+"0","  pvalueCutoff = 0.05,"
+"0","  pAdjustMethod = ""BH"","
+"0","  minGSSize = 10,"
+"0","  maxGSSize = 500)"
+"2","Error in enrichKEGG(gene_list, organism = ""hsa"", keyType = ""kegg"", pvalueCutoff = 0.05,  : 
+  could not find function ""enrichKEGG""
+"

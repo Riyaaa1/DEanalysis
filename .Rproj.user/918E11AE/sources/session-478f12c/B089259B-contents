@@ -1,0 +1,334 @@
+---
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+---title: "RNA seq analysis" author: "riya" date: "2023-07-18" output:
+html_document ---
+
+## RNA seq analysis
+
+There is ongoing research focused on developing therapies for Ewing
+sarcoma, a type of pediatric bone cancer. One key target is the
+EWSR1-FLI1 fusion oncogene, which results from the fusion of the EWSR1
+and FLI1 genes. However, the exact effects of suppressing EWSR1-FLI1 on
+the gene expression patterns within Ewing sarcoma tumor cells are still
+not fully understood.
+
+### Loading the necessary libraries
+
+```{r, echo=FALSE}
+library(dplyr)
+library(tidyr)
+library(DESeq2)
+library(pheatmap)
+library(EnhancedVolcano)
+library(ggplot2)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
+library(RColorBrewer)
+library(GenomicRanges)
+```
+
+### Reading the data
+
+<p style="text-align:center;">
+
+The dataset is in <b>RangedSummarizedExperiment</b> format, which is a
+common format used for storing and analyzing genomic data. The metadata
+associated with this dataset includes a column called "condition" with
+two levels: (1) "shEF1" representing EWSR1-FLI1 knock-down samples, and
+(2) "shCTR" representing control samples. There are a total of three
+shCTR samples and four shEF1 samples in the dataset.
+
+</p>
+
+```{r,echo =FALSE}
+rse <- readRDS("data/EwS.rds")
+
+rse$condition <- ifelse(rse$condition=="shCTR","control","knockout")
+
+fixed_rownames <- sapply(strsplit(rownames(rse),".",fixed = T), function(x) x[1])
+rownames(rse) <- fixed_rownames
+```
+
+Here, the rownames or genes in our dataset has been represented by
+ENSEMBL Id along with the version number. I am removing the version
+number to make it easier for downstream analysis such as performing gene
+annotation.
+
+### Creating DESeq2 object
+
+To run our data through DESeq2, we need to convert it into
+`DESeqDataSet` object. For this, we will need a `count matrix` and a
+`design` formula. The design formula specifies column(s) from the
+metadata we are interested in and how to use it for analysis. Here in
+our experiment, I am interested in studying differences in gene
+expression in two different condition, hence I have specified column
+`~condition` as my design formula.
+
+```{r,warning=FALSE}
+dds <- DESeqDataSet(rse,design = ~condition )
+dim(dds)
+```
+
+Filtering out any genes with very low expression for all the samples
+
+```{r}
+dds <- dds[rowSums(counts(dds)) >=10,] 
+dim(dds)
+```
+
+#### Normalize the count data
+
+Normalization is performed to account for differences in library sizes
+and other sources of technical variation, enabling accurate comparisons
+of gene expression levels. By normalizing the count data, it becomes
+possible to remove potential biases and obtain a more reliable
+representation of gene expression levels, facilitating comparisons
+between genes across different samples.
+
+```{r,echo=FALSE}
+dds <- estimateSizeFactors(dds) # getting the size factors for each sample and assigning it back to dds object
+# getting the normalised counts
+normalized_counts <- counts(dds, normalized = TRUE)
+```
+
+### Quality control
+
+Before moving along with further analyses, it is often recommended to
+perform quality control checks on the count data to help us make sure
+that samples look good. In RNA seq analysis, this helps to provide
+answers to common questions like - how similar/different samples are ?
+are there any outliers? Where does the maximum variation in our dataset
+arise from?
+
+Common sample-level QC include unsupervised clustering methods like
+Principal Component Analysis (PCA) and hierarchical clustering methods.
+To improve clustering/distances for visualization, normalised counts are
+transformed prior to applying these QC methods. DESeq2 offers two
+transformation methods namely- <b>regularized log </b> (rlog)
+transformation and <b>variance stabilising transformation </b>(vst).
+
+#### Why transform data?
+
+When conducting exploratory analysis for high dimensional data using
+PCA, or hierarchical clustering, it is best that the variance of data
+remains constant at different ranges of the mean values. But, when
+dealing with count data such as RNA-seq, it is common to see variance
+increase with the mean (<b>heteroskedasticity</b>). This can lead to
+biased representation of data where variables with larger variance
+dominate the PCA results. So, transformation helps to stabilize the
+variance of the data, improving further statistical analysis.
+
+```{r,echo=FALSE}
+rld <- rlog(dds, blind= TRUE)
+```
+
+The function *rlog()* returns an object based on
+`RangedSummarisedExperiment` class. The assay slot contains the actual
+count which we have stored inside *rld* object.
+
+<b>rlog vs vst?</b> rlog works well with smaller datasets, but when it
+comes to larger datasets (hundreds of samples) or ones with high count
+outliers, vst outperforms.
+
+#### 1. PCA
+
+```{r}
+plotPCA(rld, intgroup = "condition")
+```
+
+PCA aims to identify patterns and reduce the complexity of
+high-dimensional datasets by transforming the data into a new set of
+linear variables called principal components. <b>PC1</b> or the first
+component accounts for most variation, PC2 accounts for second most and
+so on. Each data point represents a sample, and its position in the plot
+reflects it's relationship to the other samples in the dataset. Here's
+more on PCA [PCA-
+explained](https://blog.bioturing.com/2018/06/14/principal-component-analysis-explained-simply/).
+
+Here in above PCA plot, a clear clustering between knockout and control
+samples indicates that the gene expression differences between two
+conditions are strong enough to be captured by principal components. The
+knockout samples are dispersed along PC1, suggesting that they have
+diverse gene expression profiles compared to control samples -which are
+seen clustered together around PC2. This clustering around PC2 indicates
+that they have similar gene expression levels for the genes that
+contribute to the variation captured by PC2. Interestingly, knockout
+samples seem to be divided into two sub clusters suggesting likelihood
+of additional differences in gene expression profiles among these sub
+clusters.
+
+#### 2. Hierarchical clustering
+
+```{r}
+# creating matrix from the transformed rld object for visualisation
+rld_matrix <- assay(rld)
+# creating correlation matrix from rld_matrix
+rld_cor <- cor(rld_matrix)
+## creating annotation df 
+annotation <- data.frame(condition = rse$condition)
+rownames(annotation)<-colnames(rld_matrix)
+
+pheatmap(rld_cor,annotation_col = annotation)
+
+```
+
+We can see good clustering among samples belonging to two conditions.
+Within each conditions, samples should be more similar to each other
+than samples from other conditions. This indicates that gene expression
+patterns are consistent within each condition. Hence, the heatmap
+indicates that the conditions are distinct and can be distinguished
+based on gene expression patterns.
+
+So far, our samples look good and ready for further analysis.
+
+### Performing differential analysis
+
+Let's run the actual differential analysis using <i>DESeq()</i>
+function.
+
+```{r,echo=FALSE}
+dds <- DESeq(dds)
+```
+
+In this single line of code, `DESeq2` performs normalization, estimation
+of dispersion, and shrinkage estimation to improve the accuracy of
+differential expression analysis. It then fits a negative binomial model
+and conducts hypothesis testing to identify genes with significant
+changes in expression between the conditions of interest.
+
+```{r}
+# obtain the results
+res <-results(dds)
+```
+
+The output of *DESeq()* is accessed using results() function which
+contains all the information regarding differentially expressed genes
+and their statistical properties.
+
+```{r}
+# dispersion plot
+plotDispEsts(dds)
+```
+
+The dispersion plot allows us to verify that the model fits to our data.
+When looking for a good fit, you expect your data to generally scatter
+around the curve, with the dispersion decreasing with increasing mean
+expression levels which is what we see in above plot.
+
+Here, the blue "fitted" values represent initial dispersion estimates
+before any shrinkage. Red represents final estimates i.e. after the
+shrinkage has been applied. The circled genes have extreme variance and
+are not well fitted by the red dispersion line.
+
+```{r}
+#MA plot
+plotMA(res,ylim = c(-4,4))
+```
+
+```{r, warning=FALSE}
+res_df <- data.frame(res)
+# histogram of p values
+ggplot(res_df, aes(x=pvalue))+
+  geom_histogram(bins = 100)
+```
+
+Visualising histogram plot for p-values helps to see how the null and
+alternative hypotheses are distributed. The plot we see above has a peak
+near near 0 which falls uniformly as we move towards right. This
+represents a "well-behaved" set of p-values (anti-conservative p
+values). The taller the peak, the more p-values are close to 0 and are
+significant. Here's more on interpreting p-value histogram [why plot
+p-values?](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/).
+
+```{r}
+#Set thresholds
+padj.cutoff <- 0.05
+lfc.cutoff <- 0.58
+#subset significant genes
+sig_res <- filter(res_df, padj<padj.cutoff& abs(log2FoldChange)> lfc.cutoff)
+dim(sig_res)
+```
+
+```{r, warning=FALSE}
+# Adding gene annotation to the table with significant genes
+anno <- AnnotationDbi::select(org.Hs.eg.db,rownames(sig_res),
+                              columns = c("ENSEMBL","ENTREZID","SYMBOL","GENENAME"),
+                              keytype = "ENSEMBL")
+results <- cbind(ENSEMBL = rownames(sig_res),sig_res)
+anno_results <- left_join(as.data.frame(results),anno)
+```
+
+```{r,warning=FALSE}
+#Volcano Plot
+EnhancedVolcano(anno_results, x = "log2FoldChange", y = "padj", lab = anno_results$SYMBOL,
+                title = "DESeq2 results",
+                subtitle = "Differential expression",
+                border = "full")
+```
+
+```{r}
+#Set a color palette
+heat_colors <- brewer.pal(8, "YlOrRd")
+DE_genes<-normalized_counts[anno_results$ENSEMBL,]
+
+pheatmap(DE_genes,
+         annotation_col = annotation,
+         color=heat_colors,
+         show_rownames = F,
+         cluster_rows = T,
+         border_color = NA, 
+         fontsize = 10, 
+         scale = "row", 
+         fontsize_row = 10, 
+         height = 20,
+         main = "differentially expressed genes")
+```
+
+### Enrichment analysis
+
+The goal with gene enrichment analysis is to identify the biological
+functions, pathways or processes that are over represented or enriched
+in our data.
+
+```{r}
+# Subset the data frame to remove rows with NA values
+anno_results <- anno_results[rowSums(is.na(anno_results)) == 0, ]
+anno_results <- anno_results[which(duplicated(anno_results$ENTREZID)==F),]
+
+```
+
+It is always best to remove any missing or redundant values from the
+data to prevent from introducing biases further in the analysis.
+
+```{r, warning=FALSE}
+gene_list <- foldChanges$ENTREZID
+kegg_enrich<-enrichKEGG(
+  gene_list,
+  organism = "hsa",
+  keyType = "kegg",
+  pvalueCutoff = 0.05,
+  pAdjustMethod = "BH",
+  minGSSize = 10,
+  maxGSSize = 500)
+
+kegg_res <- kegg_enrich@result %>%
+  as.data.frame()%>%
+  arrange(pvalue)
+
+top_pathways <- head(kegg_res, 10)
+top_pathways
+```
+
+```{r}
+# Plot the top 10 enriched pathways
+ggplot(top_pathways, aes(x = reorder(Description, -log10(pvalue)), y = -log10(pvalue))) +
+  geom_bar(stat = "identity", fill = "red") +
+  labs(title = "Top 10 Enriched KEGG Pathways",
+       x = "Pathways",
+       y = "-log10(p-value)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```

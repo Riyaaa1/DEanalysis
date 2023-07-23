@@ -1,0 +1,5 @@
+"0","#MA plot"
+"0","plotMA(res,ylim = c(-4,4))"
+"2","Error in h(simpleError(msg, call)) : 
+  error in evaluating the argument 'object' in selecting a method for function 'plotMA': object 'res' not found
+"

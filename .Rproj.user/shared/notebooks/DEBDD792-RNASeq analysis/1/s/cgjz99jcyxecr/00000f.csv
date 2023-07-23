@@ -1,0 +1,9 @@
+"0","dds <- DESeqDataSet(rse,design = ~condition )"
+"2","converting counts to integer mode
+"
+"0","dim(dds)"
+"1","[1]"
+"1"," 58037"
+"1","     7"
+"1","
+"

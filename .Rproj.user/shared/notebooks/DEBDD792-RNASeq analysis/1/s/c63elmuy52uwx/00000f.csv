@@ -1,0 +1,6 @@
+"0","rse <- readRDS(""data/EwS.rds"")"
+"0",""
+"0","rse$condition <- ifelse(rse$condition==""shCTR"",""control"",""knockout"")"
+"0",""
+"0","fixed_rownames <- sapply(strsplit(rownames(rse),""."",fixed = T), function(x) x[1])"
+"0","rownames(rse) <- fixed_rownames"

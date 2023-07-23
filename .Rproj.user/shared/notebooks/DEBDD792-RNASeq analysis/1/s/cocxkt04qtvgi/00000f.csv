@@ -1,0 +1,4 @@
+"0","res_df <- data.frame(res)"
+"0","# histogram of p values"
+"0","ggplot(res_df, aes(x=pvalue))+"
+"0","  geom_histogram(bins = 100)"

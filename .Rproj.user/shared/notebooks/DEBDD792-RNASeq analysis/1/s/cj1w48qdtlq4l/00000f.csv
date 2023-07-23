@@ -1,0 +1,4 @@
+"0","# Subset the data frame to remove rows with NA values"
+"0","anno_results <- anno_results[rowSums(is.na(anno_results)) == 0, ]"
+"0","anno_results <- anno_results[which(duplicated(anno_results$ENTREZID)==F),]"
+"0",""

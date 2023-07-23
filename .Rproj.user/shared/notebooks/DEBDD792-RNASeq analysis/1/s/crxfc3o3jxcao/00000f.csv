@@ -1,0 +1,5 @@
+"0","#Volcano Plot"
+"0","EnhancedVolcano(anno_results, x = ""log2FoldChange"", y = ""padj"", lab = anno_results$SYMBOL,"
+"0","                title = ""DESeq2 results"","
+"0","                subtitle = ""Differential expression"","
+"0","                border = ""full"")"

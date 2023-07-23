@@ -1,0 +1,5 @@
+"0","#Set thresholds"
+"0","padj.cutoff <- 0.05"
+"0","lfc.cutoff <- 0.58"
+"0","#subset significant genes"
+"0","sig_res <- filter(res_df, padj<padj.cutoff& abs(log2FoldChange)> lfc.cutoff)"

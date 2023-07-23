@@ -1,0 +1,7 @@
+"0","# create the bar plot"
+"0","ggplot(top_pathways, aes(x = reorder(Description, -log10(pvalue)), y = -log10(pvalue))) +"
+"0","  geom_bar(stat = ""identity"", fill = ""red"") +"
+"0","  labs(title = ""Top 10 Enriched KEGG Pathways"","
+"0","       x = ""Pathways"","
+"0","       y = ""-log10(p-value)"") +"
+"0","  theme(axis.text.x = element_text(angle = 45, hjust = 1))"

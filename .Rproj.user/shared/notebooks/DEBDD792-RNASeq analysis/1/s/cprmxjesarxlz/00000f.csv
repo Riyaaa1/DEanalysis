@@ -1,0 +1,9 @@
+"0","# Adding gene annotation to the table with significant genes"
+"0","anno <- AnnotationDbi::select(org.Hs.eg.db,rownames(sig_res),"
+"0","                              columns = c(""ENSEMBL"",""ENTREZID"",""SYMBOL"",""GENENAME""),"
+"0","                              keytype = ""ENSEMBL"")"
+"2","'select()' returned 1:many mapping between keys and columns
+"
+"0","results <- cbind(ENSEMBL = rownames(sig_res),sig_res)"
+"0","anno_results <- left_join(as.data.frame(results),anno)"
+"2","Joining with `by = join_by(ENSEMBL)`"

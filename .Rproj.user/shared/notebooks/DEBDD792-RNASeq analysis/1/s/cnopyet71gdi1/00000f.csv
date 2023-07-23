@@ -1,0 +1,3 @@
+"0","dds <- estimateSizeFactors(dds) # getting the size factors for each sample and assigning it back to dds object"
+"0","# getting the normalised counts"
+"0","normalized_counts <- counts(dds, normalized = TRUE)"
