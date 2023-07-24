@@ -1,3 +1,3 @@
 # DEanalysis
 Differential expression analysis of Ewing Sarcoma rna-seq dataset
-https://github.com/Riyaaa1/DEanalysis/raw/master/docs/DE-analysis.html
+file:///C:/Users/user/OneDrive/Desktop/R%20projects/rna%20seq%20analysis/DEanalysis/DE-analysis.html
